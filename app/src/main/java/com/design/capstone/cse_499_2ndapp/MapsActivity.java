@@ -5,6 +5,7 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.design.capstone.cse_499_2ndapp.Model.Online;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -16,6 +17,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
@@ -28,6 +30,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     DatabaseReference userBusyRef = database.getReference("isBusy");
 
     ArrayList<String> onlineUserKeyList = new ArrayList<>();
+    ArrayList<Online> onlineUserList ;
 
 
 
@@ -35,6 +38,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        onlineUserList = new ArrayList<>();
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -82,6 +87,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     public void getOnlineUser(){
+/*
 
         userOnlineRef.addChildEventListener(new ChildEventListener() {
             @Override
@@ -92,6 +98,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
                 onlineUserKeyList.add(dataSnapshot.getKey());
+
 
             }
 
@@ -118,8 +125,46 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         });
+*/
+
+        userOnlineRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot data : dataSnapshot.getChildren()) {
+                    Online tempOnlineUser = data.getValue(Online.class);
 
 
+                    onlineUserList.add(tempOnlineUser);
+
+
+
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+
+
+    }
+
+    public void getOnlineUserData(){
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+
+
+
+
+            }
+        });
 
     }
 
