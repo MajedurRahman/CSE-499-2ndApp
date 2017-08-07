@@ -10,6 +10,11 @@ public class Online  {
     private double latitide;
     private  double longitude;
 
+    public Online(){
+
+
+    }
+
     public Online(String id, double latitide, double longitude) {
 
         this.id = id;
