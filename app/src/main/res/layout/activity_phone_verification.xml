@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.design.capstone.cse_499_2ndapp.MapsActivity">
+
+    <EditText
+        android:id="@+id/phoneNumberforver"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+
+        android:layout_above="@+id/verifyBtn"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="20dp"
+        android:hint="Enter Phone Number"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:inputType="number"
+        android:maxLength="11" />
+
+
+    <Button
+    android:id="@+id/verifyBtn"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_centerHorizontal="true"
+    android:layout_centerVertical="true"
+    android:background="#FFE4C606"
+    android:hint="Verify Phone Number"
+    android:layout_marginLeft="20dp"
+    android:layout_marginRight="20dp"
+    android:textColorHint="#fff"
+    android:textSize="18dp" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginLeft="60dp"
+        android:layout_marginTop="10dp"
+        android:inputType="number"
+        android:layout_marginBottom="10dp"
+        android:layout_marginRight="60dp"
+        android:hint="Verification Code"
+        android:layout_below="@id/verifyBtn"
+        android:id="@+id/codeEt" />
+
+
+    <Button
+        android:id="@+id/verifycodeBtn"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:background="#FF32BC19"
+        android:hint="Verify Code"
+        android:textColorHint="#fff"
+        android:textSize="18dp"
+        android:layout_below="@+id/codeEt"
+        android:layout_centerHorizontal="true"
+         />
+
+</RelativeLayout>

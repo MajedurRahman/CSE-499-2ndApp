@@ -7,7 +7,7 @@ package com.design.capstone.cse_499_2ndapp.Model;
 public class Online  {
 
     private String id ;
-    private double latitide;
+    private double latitude;
     private  double longitude;
 
     public Online(){
@@ -15,10 +15,10 @@ public class Online  {
 
     }
 
-    public Online(String id, double latitide, double longitude) {
+    public Online(String id, double latitude, double longitude) {
 
         this.id = id;
-        this.latitide = latitide;
+        this.latitude = latitude;
         this.longitude = longitude;
     }
 
@@ -30,12 +30,12 @@ public class Online  {
         this.id = id;
     }
 
-    public double getLatitide() {
-        return latitide;
+    public double getLatitude() {
+        return latitude;
     }
 
-    public void setLatitide(double latitide) {
-        this.latitide = latitide;
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
     }
 
     public double getLongitude() {

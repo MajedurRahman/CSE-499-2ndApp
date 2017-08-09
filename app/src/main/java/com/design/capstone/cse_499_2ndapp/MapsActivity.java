@@ -3,7 +3,9 @@ package com.design.capstone.cse_499_2ndapp;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.StrictMode;
 import android.support.v4.app.FragmentActivity;
+import android.widget.Toast;
 
 import com.design.capstone.cse_499_2ndapp.Model.Online;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -13,14 +15,20 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.onesignal.OneSignal;
 
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -30,12 +38,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     ArrayList<LatLng> userPositionList;
     ArrayList<String> onlineUserKeyList = new ArrayList<>();
     ArrayList<Online> onlineUserList;
+    String userID;
     private GoogleMap mMap;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+
+        OneSignal.startInit(this)
+                .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
+                .unsubscribeWhenNotificationsAreDisabled(true)
+                .init();
 
         onlineUserList = new ArrayList<>();
         userPositionList = new ArrayList<>();
@@ -43,15 +59,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
+        mAuth = FirebaseAuth.getInstance();
+        userID = mAuth.getCurrentUser().getPhoneNumber().toString();
         updateOnlineUserData();
-
         getDataListner();
+        initOneSignalData();
+
+    }
+
+    public void initOneSignalData() {
+
+        OneSignal.sendTag("User_ID", userID);
 
 
     }
 
-   public void  updateOnlineUserData(){
+
+    public void updateOnlineUserData() {
 
 
         AsyncTask.execute(new Runnable() {
@@ -79,13 +103,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void getDataListner() {
 
 
-
-
         userOnlineRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
                 updateOnlineUserData();
+                if (!dataSnapshot.getKey().toString().trim().equalsIgnoreCase((userID.trim()))) {
+
+                    sendNotification();
+                }
+
 
             }
 
@@ -138,50 +165,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 15));
 
 
-
     }
 
 
     public void getOnlineUser() {
-/*
-
-        userOnlineRef.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-
-                Log.e("User : " , dataSnapshot.toString() );
-
-
-
-                onlineUserKeyList.add(dataSnapshot.getKey());
-
-
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-                onlineUserKeyList.remove(onlineUserKeyList.indexOf(dataSnapshot.getKey()));
-                Log.e("user : removed " , ""+ dataSnapshot.getKey());
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-*/
 
         userOnlineRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -191,7 +178,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     onlineUserList.clear();
                     userPositionList.clear();
-                    mMap.clear();
+                    if (mMap != null) {
+                        mMap.clear();
+                    }
+
                 }
 
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
@@ -213,13 +203,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
 
-
-
-
-
-
-
-
     }
 
     public void getOnlineUserData() {
@@ -229,7 +212,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void run() {
                 for (int i = 0; i < onlineUserList.size(); i++) {
-                    LatLng latlong = new LatLng(onlineUserList.get(i).getLatitide(), onlineUserList.get(i).getLongitude());
+                    LatLng latlong = new LatLng(onlineUserList.get(i).getLatitude(), onlineUserList.get(i).getLongitude());
                     userPositionList.add(latlong);
                 }
 
@@ -238,6 +221,71 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
     }
+
+
+    private void sendNotification() {
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                int SDK_INT = android.os.Build.VERSION.SDK_INT;
+                if (SDK_INT > 8) {
+                    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+                            .permitAll().build();
+                    StrictMode.setThreadPolicy(policy);
+
+
+                    try {
+                        String jsonResponse;
+
+                        URL url = new URL("https://onesignal.com/api/v1/notifications");
+                        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                        con.setUseCaches(false);
+                        con.setDoOutput(true);
+                        con.setDoInput(true);
+
+                        con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                        con.setRequestProperty("Authorization", "Basic ODVkNDdjZTMtMThlNy00M2VmLTkwYTItOGI3NTgyNmQ5MDlm");
+                        con.setRequestMethod("POST");
+
+                        String strJsonBody = "{"
+                                +   "\"app_id\": \"9902773d-e28d-4b87-9ed2-b1683306d0bc\","
+                                +   "\"included_segments\": [\"All\"],"
+                                +   "\"data\": {\"foo\": \"bar\"},"
+                                +   "\"contents\": {\"en\": \"Someone is Visible in Map \"}"
+                                + "}";
+
+
+                        System.out.println("strJsonBody:\n" + strJsonBody);
+
+                        byte[] sendBytes = strJsonBody.getBytes("UTF-8");
+                        con.setFixedLengthStreamingMode(sendBytes.length);
+
+                        OutputStream outputStream = con.getOutputStream();
+                        outputStream.write(sendBytes);
+
+                        int httpResponse = con.getResponseCode();
+                        System.out.println("httpResponse: " + httpResponse);
+
+                        if (httpResponse >= HttpURLConnection.HTTP_OK
+                                && httpResponse < HttpURLConnection.HTTP_BAD_REQUEST) {
+                            Scanner scanner = new Scanner(con.getInputStream(), "UTF-8");
+                            jsonResponse = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
+                            scanner.close();
+                        } else {
+                            Scanner scanner = new Scanner(con.getErrorStream(), "UTF-8");
+                            jsonResponse = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
+                            scanner.close();
+                        }
+                        System.out.println("jsonResponse:\n" + jsonResponse);
+
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+
 
     public void addMarkerOnMap(double latitude, double longitude) {
         MarkerOptions markerOption = new MarkerOptions()

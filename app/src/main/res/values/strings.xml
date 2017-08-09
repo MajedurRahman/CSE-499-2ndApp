@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">"CSE-499 - 2nd App "</string>
-    <string name="title_activity_maps">Map</string>
+    <string name="app_name">"monitor499"</string>
+    <string name="title_activity_maps">monitor499</string>
 </resources>
