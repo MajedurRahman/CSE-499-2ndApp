@@ -5,7 +5,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.StrictMode;
 import android.support.v4.app.FragmentActivity;
-import android.widget.Toast;
+import android.view.View;
+import android.widget.Button;
 
 import com.design.capstone.cse_499_2ndapp.Model.Online;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -41,15 +42,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     String userID;
     private GoogleMap mMap;
     private FirebaseAuth mAuth;
+    private Button signOutButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+        initComponents();
+        initAction();
 
         OneSignal.startInit(this)
-                .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.Notification)
+                .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.InAppAlert)
                 .unsubscribeWhenNotificationsAreDisabled(true)
                 .init();
 
@@ -59,12 +63,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+
         mAuth = FirebaseAuth.getInstance();
         userID = mAuth.getCurrentUser().getPhoneNumber().toString();
+
+
         updateOnlineUserData();
         getDataListner();
         initOneSignalData();
 
+
+
+    }
+
+    private void initAction() {
+
+
+        signOutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                mAuth.signOut();
+                finish();
+            }
+        });
+    }
+
+    private void initComponents() {
+
+        signOutButton =  findViewById(R.id.sign_out_button);
     }
 
     public void initOneSignalData() {
@@ -248,10 +276,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         con.setRequestMethod("POST");
 
                         String strJsonBody = "{"
-                                +   "\"app_id\": \"9902773d-e28d-4b87-9ed2-b1683306d0bc\","
-                                +   "\"included_segments\": [\"All\"],"
-                                +   "\"data\": {\"foo\": \"bar\"},"
-                                +   "\"contents\": {\"en\": \"Someone is Visible in Map \"}"
+                                + "\"app_id\": \"9902773d-e28d-4b87-9ed2-b1683306d0bc\","
+                                + "\"included_segments\": [\"All\"],"
+                                + "\"data\": {\"foo\": \"bar\"},"
+                                + "\"contents\": {\"en\": \"Someone is Visible in Map \"}"
                                 + "}";
 
 
