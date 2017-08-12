@@ -52,10 +52,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         initComponents();
         initAction();
 
-        OneSignal.startInit(this)
-                .inFocusDisplaying(OneSignal.OSInFocusDisplayOption.InAppAlert)
-                .unsubscribeWhenNotificationsAreDisabled(true)
-                .init();
 
         onlineUserList = new ArrayList<>();
         userPositionList = new ArrayList<>();
@@ -136,10 +132,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
                 updateOnlineUserData();
-                if (!dataSnapshot.getKey().toString().trim().equalsIgnoreCase((userID.trim()))) {
+              /*  if (!dataSnapshot.getKey().toString().trim().equalsIgnoreCase((userID.trim()))) {
 
                     sendNotification();
-                }
+                }*/
 
 
             }

@@ -6,11 +6,10 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-
+import android.widget.TextView;
 
 import com.design.capstone.cse_499_2ndapp.Model.User;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -30,23 +29,18 @@ import java.util.concurrent.TimeUnit;
 
 public class PhoneVerificationActivity extends AppCompatActivity {
 
-    EditText phoneNumberEt , codeEt;
+    private static final String TAG = "PhoneVerificationActivity";
+    EditText phoneNumberEt, codeEt;
     Button verifyBtn, verifyCodeBtn;
-
-    private FirebaseAuth mAuth;
-    private PhoneAuthProvider.ForceResendingToken mResendToken;
-    private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
-
     User user;
     String mVerificationId;
-
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference userOnlineRef = database.getReference("isOnline");
     DatabaseReference userBusyRef = database.getReference("isBusy");
     DatabaseReference userRef = database.getReference("UserData");
-
-    private static final String TAG = "PhoneVerificationActivity";
-
+    private FirebaseAuth mAuth;
+    private PhoneAuthProvider.ForceResendingToken mResendToken;
+    private PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +54,6 @@ public class PhoneVerificationActivity extends AppCompatActivity {
 
 
     }
-
 
 
     private void initFireBaseSMSverification() {
@@ -91,7 +84,9 @@ public class PhoneVerificationActivity extends AppCompatActivity {
                 mResendToken = token;
             }
         };
-    }  private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
+    }
+
+    private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -148,19 +143,19 @@ public class PhoneVerificationActivity extends AppCompatActivity {
         }
         return true;
     }
- @Override
+
+    @Override
     public void onStart() {
         super.onStart();
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
-            startActivity(new Intent(PhoneVerificationActivity.this,MapsActivity.class));
+            startActivity(new Intent(PhoneVerificationActivity.this, MapsActivity.class));
             finish();
         }
     }
 
 
     private void initOnClickAction() {
-
 
 
         verifyBtn.setOnClickListener(new View.OnClickListener() {
@@ -171,7 +166,7 @@ public class PhoneVerificationActivity extends AppCompatActivity {
                 }
 
                 String phoneNumber = phoneNumberEt.getText().toString();
-                startPhoneNumberVerification("+88"+phoneNumber);
+                startPhoneNumberVerification("+88" + phoneNumber);
 
             }
         });
@@ -196,15 +191,14 @@ public class PhoneVerificationActivity extends AppCompatActivity {
     }
 
 
-
-
     private void intComponents() {
-
 
 
         phoneNumberEt = (EditText) findViewById(R.id.phoneNumberforver);
         codeEt = (EditText) findViewById(R.id.codeEt);
         verifyBtn = (Button) findViewById(R.id.verifyBtn);
         verifyCodeBtn = (Button) findViewById(R.id.verifycodeBtn);
+        TextView scrollTV = (TextView) findViewById(R.id.scrollabletv);
+        scrollTV.setSelected(true);
     }
 }
