@@ -1,4 +1,4 @@
-package com.design.capstone.cse_499_2ndapp;
+package com.design.capstone.cse_499_2ndapp.Activity;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.Button;
 
 import com.design.capstone.cse_499_2ndapp.Model.Online;
+import com.design.capstone.cse_499_2ndapp.R;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;

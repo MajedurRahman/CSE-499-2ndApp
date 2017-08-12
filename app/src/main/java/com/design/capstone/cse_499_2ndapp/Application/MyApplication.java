@@ -1,9 +1,10 @@
-package com.design.capstone.cse_499_2ndapp;
+package com.design.capstone.cse_499_2ndapp.Application;
 
 import android.app.Application;
 import android.content.Context;
-import android.widget.Toast;
 
+import com.design.capstone.cse_499_2ndapp.NotificationHandler.MyNotificationOpenedHandler;
+import com.design.capstone.cse_499_2ndapp.NotificationHandler.MyNotificationReceivedHandler;
 import com.onesignal.OneSignal;
 
 public class MyApplication extends Application {

@@ -1,9 +1,11 @@
-package com.design.capstone.cse_499_2ndapp;
+package com.design.capstone.cse_499_2ndapp.Service;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v4.app.NotificationCompat;
 
+import com.design.capstone.cse_499_2ndapp.Application.MyApplication;
+import com.design.capstone.cse_499_2ndapp.R;
 import com.onesignal.NotificationExtenderService;
 import com.onesignal.OSNotificationDisplayedResult;
 import com.onesignal.OSNotificationReceivedResult;

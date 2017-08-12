@@ -1,9 +1,12 @@
-package com.design.capstone.cse_499_2ndapp;
+package com.design.capstone.cse_499_2ndapp.NotificationHandler;
 
 import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.design.capstone.cse_499_2ndapp.Activity.AnotherActivity;
+import com.design.capstone.cse_499_2ndapp.Activity.MapsActivity;
+import com.design.capstone.cse_499_2ndapp.Application.MyApplication;
 import com.onesignal.OSNotificationAction;
 import com.onesignal.OSNotificationOpenResult;
 import com.onesignal.OneSignal;
@@ -31,9 +34,19 @@ public class MyNotificationOpenedHandler  implements OneSignal.NotificationOpene
 
 
             } else if (result.action.actionID.equals("cancel")) {
-                Toast.makeText(MyApplication.getContext(), "ActionTwo Button was pressed", Toast.LENGTH_LONG).show();
+
             }
 
+
         }
+
+        if (data!=null&&data.optString("tap").equals("tap")){
+
+            Intent intent = new Intent(MyApplication.getContext(), MapsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_NEW_TASK);
+            MyApplication.getContext().startActivity(intent);
+
+        }
+
     }
 }

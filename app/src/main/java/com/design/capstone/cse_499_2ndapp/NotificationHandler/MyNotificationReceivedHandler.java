@@ -1,4 +1,4 @@
-package com.design.capstone.cse_499_2ndapp;
+package com.design.capstone.cse_499_2ndapp.NotificationHandler;
 
 import android.util.Log;
 
