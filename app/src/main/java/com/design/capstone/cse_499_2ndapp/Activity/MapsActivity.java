@@ -89,12 +89,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void initComponents() {
 
-        signOutButton =  findViewById(R.id.sign_out_button);
+        signOutButton = (Button) findViewById(R.id.sign_out_button);
     }
 
     public void initOneSignalData() {
 
         OneSignal.sendTag("User_ID", userID);
+        OneSignal.sendTag("type", "monitor");
+
 
 
     }
