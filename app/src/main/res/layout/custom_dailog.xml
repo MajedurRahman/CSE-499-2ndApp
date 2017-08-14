@@ -1,61 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Base.Animation.AppCompat.Dialog"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="10dp"
-    style="@style/Base.Animation.AppCompat.Dialog">
+    android:layout_margin="10dp">
 
 
-        <RelativeLayout
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/description"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:hint="You Have a Request from"
+            android:textColorHint="#395050"
+            android:textSize="30dp" />
 
-            <TextView
-                android:id="@+id/description"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
 
-                android:layout_alignParentStart="true"
-                android:layout_alignParentTop="true"
-                android:layout_marginTop="20dp"
-                android:gravity="center"
-                android:hint="You Have a Request"
-                android:textSize="30dp" />
+        <TextView
+            android:id="@+id/requestUserID"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/description"
+            android:padding="10dp"
+            android:elevation="20dp"
+            android:text="+8801775676776"
+            android:textAlignment="center"
+            android:textColor="@android:color/holo_red_light"
+            android:textSize="30sp"
+            android:textStyle="bold" />
 
-            <Button
-                android:id="@+id/accept"
-                android:layout_width="130dp"
-                android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:layout_below="@+id/description"
-                android:layout_marginBottom="10dp"
-                android:layout_marginTop="30dp"
-                android:background="@drawable/round_button"
-                android:elevation="10dp"
-                android:hint="Accept"
+        <Button
+            android:id="@+id/accept"
+            android:layout_width="130dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/requestUserID"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/round_button"
+            android:elevation="10dp"
+            android:hint="Accept"
 
-                android:textColorHint="#eff1ef"
-                android:textSize="22dp"
-                android:textStyle="normal|bold" />
+            android:textColorHint="#eff1ef"
+            android:textSize="22dp"
+            android:textStyle="normal|bold" />
 
-            <Button
-                android:id="@+id/cancel"
-                android:layout_width="130dp"
-                android:layout_height="wrap_content"
-                android:layout_alignBaseline="@+id/accept"
-                android:layout_alignParentLeft="true"
-                android:layout_below="@+id/description"
-                android:layout_marginBottom="10dp"
-                android:background="@drawable/round_button_red"
-                android:elevation="10dp"
-                android:hint="Cancel"
-                android:textColorHint="#eff1ef"
-                android:textSize="22dp"
-                android:textStyle="normal|bold" />
-        </RelativeLayout>
-
+        <Button
+            android:id="@+id/cancel"
+            android:layout_width="130dp"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/accept"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/requestUserID"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/round_button_red"
+            android:elevation="10dp"
+            android:hint="Cancel"
+            android:textColorHint="#eff1ef"
+            android:textSize="22dp"
+            android:textStyle="normal|bold" />
+    </RelativeLayout>
 
 
 </RelativeLayout>
