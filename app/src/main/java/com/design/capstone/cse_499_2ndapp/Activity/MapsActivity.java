@@ -1,12 +1,17 @@
 package com.design.capstone.cse_499_2ndapp.Activity;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.StrictMode;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Switch;
+import android.widget.Toast;
 
 import com.design.capstone.cse_499_2ndapp.Model.Online;
 import com.design.capstone.cse_499_2ndapp.R;
@@ -14,6 +19,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -30,6 +36,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
@@ -37,19 +44,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference userOnlineRef = database.getReference("isOnline");
     DatabaseReference userBusyRef = database.getReference("isBusy");
+
+    DatabaseReference monitorRef = database.getReference("isMonitorOnline");
+
+
     ArrayList<LatLng> userPositionList;
     ArrayList<String> onlineUserKeyList = new ArrayList<>();
     ArrayList<Online> onlineUserList;
     String userID;
+    LatLng acceptUserPosition;
+    boolean Flag = false;
     private GoogleMap mMap;
     private FirebaseAuth mAuth;
     private Button signOutButton;
+    private Switch onlineOfflineSwitch;
+    private List<String> onlineMonitorList;
+    private Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-
+        intent = getIntent();
         initComponents();
         initAction();
 
@@ -65,14 +81,42 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mAuth = FirebaseAuth.getInstance();
         userID = mAuth.getCurrentUser().getPhoneNumber().toString();
 
-
         updateOnlineUserData();
         getDataListner();
         initOneSignalData();
 
 
+       getConnectedUserdata();
+
 
     }
+
+    private void getConnectedUserdata() {
+
+        if (intent != null) {
+
+            try {
+                double latitude = intent.getDoubleExtra("lat", 23.45);
+                double longitude = intent.getDoubleExtra("lon", 90.81);
+
+
+                Toast.makeText(this, "" + latitude, Toast.LENGTH_SHORT).show();
+                acceptUserPosition = new LatLng(latitude , longitude);
+                Flag = true;
+
+                addMarkerOnMap(latitude,longitude);
+
+                //  Toast.makeText(this, latitude.toString(), Toast.LENGTH_SHORT).show();
+
+            } catch (Exception e) {
+
+                Log.e(" Errrr", e.getMessage());
+            }
+
+
+        }
+    }
+
 
     private void initAction() {
 
@@ -82,7 +126,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onClick(View view) {
 
                 mAuth.signOut();
+                monitorRef.child(userID).removeValue();
                 finish();
+            }
+        });
+
+        onlineOfflineSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
+                if (checked) {
+                    onlineOfflineSwitch.setText("Online");
+                    monitorRef.child(userID).setValue(true);
+
+                } else {
+                    onlineOfflineSwitch.setText("Offline");
+                    monitorRef.child(userID).removeValue();
+
+                }
             }
         });
     }
@@ -90,13 +150,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void initComponents() {
 
         signOutButton = (Button) findViewById(R.id.sign_out_button);
+        onlineOfflineSwitch = (Switch) findViewById(R.id.onlineOfflineSwitch);
     }
 
     public void initOneSignalData() {
 
         OneSignal.sendTag("User_ID", userID);
         OneSignal.sendTag("type", "monitor");
-
 
 
     }
@@ -170,15 +230,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -190,6 +241,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Add a marker in Sydney and move the camera
         LatLng sydney = new LatLng(23.815193, 90.426079);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 15));
+
 
 
     }
@@ -320,6 +372,141 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .icon(BitmapDescriptorFactory.fromResource(R.mipmap.marker2));
 
         mMap.addMarker(markerOption);
+
+
+        if (Flag){
+
+            MarkerOptions markerConnectionUser = new MarkerOptions()
+                    .position(acceptUserPosition)
+                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.marker4));
+            mMap.addMarker(markerConnectionUser);
+
+        }
+
+
+
+
+
+
+
+
+    }
+
+    public void sendRequestToSpecificMonitorApp(final String userKey) {
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String jsonResponse;
+
+                    URL url = new URL("https://onesignal.com/api/v1/notifications");
+                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                    con.setUseCaches(false);
+                    con.setDoOutput(true);
+                    con.setDoInput(true);
+
+                    con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                    con.setRequestProperty("Authorization", "Basic ODVkNDdjZTMtMThlNy00M2VmLTkwYTItOGI3NTgyNmQ5MDlm");
+                    con.setRequestMethod("POST");
+
+                    String strJsonBody = "{"
+                            + "\"app_id\": \"9902773d-e28d-4b87-9ed2-b1683306d0bc\","
+                            + "\"filters\": [{\"field\": \"tag\", \"key\": \"User_ID\", \"relation\": \"=\", \"value\": \"" + userKey + "\"}],"
+                            + "\"data\": {\"tap\":\"tap\",\"requestId\":\"" + userID + "\"},"
+                            + "\"buttons\": [{\"id\":\"accept\",\"text\":\"OPEN\",\"icon\":\"\"},{\"id\":\"cancel\",\"text\":\"CANCEL\",\"icon\":\"\"}],"
+                            + "\"contents\": {\"en\": \"Tap Here To See Notification\"}"
+                            + "}";
+
+
+                    System.out.println("strJsonBody:\n" + strJsonBody);
+
+                    byte[] sendBytes = strJsonBody.getBytes("UTF-8");
+                    con.setFixedLengthStreamingMode(sendBytes.length);
+
+                    OutputStream outputStream = con.getOutputStream();
+                    outputStream.write(sendBytes);
+
+                    int httpResponse = con.getResponseCode();
+                    System.out.println("httpResponse: " + httpResponse);
+
+                    if (httpResponse >= HttpURLConnection.HTTP_OK
+                            && httpResponse < HttpURLConnection.HTTP_BAD_REQUEST) {
+                        Scanner scanner = new Scanner(con.getInputStream(), "UTF-8");
+                        jsonResponse = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
+                        scanner.close();
+                    } else {
+                        Scanner scanner = new Scanner(con.getErrorStream(), "UTF-8");
+                        jsonResponse = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
+                        scanner.close();
+                    }
+                    System.out.println("jsonResponse:\n" + jsonResponse);
+
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+            }
+        });
+    }
+
+
+    private void sendNotificationToOnlineUser() {
+
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String jsonResponse;
+
+                    URL url = new URL("https://onesignal.com/api/v1/notifications");
+                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                    con.setUseCaches(false);
+                    con.setDoOutput(true);
+                    con.setDoInput(true);
+
+                    con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                    con.setRequestProperty("Authorization", "Basic ODVkNDdjZTMtMThlNy00M2VmLTkwYTItOGI3NTgyNmQ5MDlm");
+                    con.setRequestMethod("POST");
+
+                    String strJsonBody = "{"
+                            + "\"app_id\": \"9902773d-e28d-4b87-9ed2-b1683306d0bc\","
+                            //  +   "\"included_segments\": [\"All\"],"
+                            + "\"filters\": [ {\"field\": \"tag\", \"key\": \"Online\", \"relation\": \"exists\"}],"
+                            + "\"data\": {\"tap\":\"tap\"},"
+                            + "\"buttons\": [{\"id\":\"explore\",\"text\":\"EXPLORE NOW\",\"icon\":\"\"}],"
+                            + "\"contents\": {\"en\": \"Someone is visible on Map\"}"
+                            + "}";
+
+
+                    System.out.println("strJsonBody:\n" + strJsonBody);
+
+                    byte[] sendBytes = strJsonBody.getBytes("UTF-8");
+                    con.setFixedLengthStreamingMode(sendBytes.length);
+
+                    OutputStream outputStream = con.getOutputStream();
+                    outputStream.write(sendBytes);
+
+                    int httpResponse = con.getResponseCode();
+                    System.out.println("httpResponse: " + httpResponse);
+
+                    if (httpResponse >= HttpURLConnection.HTTP_OK
+                            && httpResponse < HttpURLConnection.HTTP_BAD_REQUEST) {
+                        Scanner scanner = new Scanner(con.getInputStream(), "UTF-8");
+                        jsonResponse = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
+                        scanner.close();
+                    } else {
+                        Scanner scanner = new Scanner(con.getErrorStream(), "UTF-8");
+                        jsonResponse = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
+                        scanner.close();
+                    }
+                    System.out.println("jsonResponse:\n" + jsonResponse);
+
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+            }
+        });
 
     }
 
