@@ -1,25 +1,29 @@
 package com.design.capstone.cse_499_2ndapp.Activity;
 
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.StrictMode;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Switch;
-import android.widget.Toast;
 
 import com.design.capstone.cse_499_2ndapp.Model.Online;
 import com.design.capstone.cse_499_2ndapp.R;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -60,6 +64,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Switch onlineOfflineSwitch;
     private List<String> onlineMonitorList;
     private Intent intent;
+    private GoogleApiClient googleApiClient;
+    private LocationManager locationManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,13 +87,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         mAuth = FirebaseAuth.getInstance();
         userID = mAuth.getCurrentUser().getPhoneNumber().toString();
+        monitorRef.child(userID).setValue(true);
 
         updateOnlineUserData();
         getDataListner();
         initOneSignalData();
 
 
-       getConnectedUserdata();
+        getConnectedUserdata();
 
 
     }
@@ -96,21 +104,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (intent != null) {
 
             try {
-                double latitude = intent.getDoubleExtra("lat", 23.45);
-                double longitude = intent.getDoubleExtra("lon", 90.81);
+                double latitude = intent.getDoubleExtra("lat", 00.00);
+                double longitude = intent.getDoubleExtra("lon", 00.0);
+                if (latitude != 00.00 && longitude != 00.00) {
 
 
-                Toast.makeText(this, "" + latitude, Toast.LENGTH_SHORT).show();
-                acceptUserPosition = new LatLng(latitude , longitude);
-                Flag = true;
+                    acceptUserPosition = new LatLng(latitude, longitude);
+                    Flag = true;
+                    addMarkerOnMap(latitude, longitude);
+                    NotificationCompat.Builder builder =
+                            new NotificationCompat.Builder(MapsActivity.this)
+                                    .setSmallIcon(R.mipmap.ic_launcher)
+                                    .setContentTitle("CSE 499 Connection Notification")
+                                    .setContentText("Connection Established ")
+                                    .setAutoCancel(true);
 
-                addMarkerOnMap(latitude,longitude);
+                    // Add as notification
+                    NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    manager.notify(0, builder.build());
 
-                //  Toast.makeText(this, latitude.toString(), Toast.LENGTH_SHORT).show();
+
+                }
+
 
             } catch (Exception e) {
 
-                Log.e(" Errrr", e.getMessage());
+                Log.e(" Error ", e.getMessage());
             }
 
 
@@ -127,36 +146,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 mAuth.signOut();
                 monitorRef.child(userID).removeValue();
+                OneSignal.deleteTag("User_ID");
+                OneSignal.deleteTag("type");
+                monitorRef.child(userID).removeValue();
                 finish();
             }
         });
 
-        onlineOfflineSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-                if (checked) {
-                    onlineOfflineSwitch.setText("Online");
-                    monitorRef.child(userID).setValue(true);
 
-                } else {
-                    onlineOfflineSwitch.setText("Offline");
-                    monitorRef.child(userID).removeValue();
-
-                }
-            }
-        });
     }
 
     private void initComponents() {
 
         signOutButton = (Button) findViewById(R.id.sign_out_button);
-        onlineOfflineSwitch = (Switch) findViewById(R.id.onlineOfflineSwitch);
     }
 
     public void initOneSignalData() {
 
         OneSignal.sendTag("User_ID", userID);
         OneSignal.sendTag("type", "monitor");
+
 
 
     }
@@ -195,11 +204,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
                 updateOnlineUserData();
-              /*  if (!dataSnapshot.getKey().toString().trim().equalsIgnoreCase((userID.trim()))) {
-
-                    sendNotification();
-                }*/
-
 
             }
 
@@ -243,7 +247,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 15));
 
 
-
     }
 
 
@@ -267,7 +270,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Online tempOnlineUser = data.getValue(Online.class);
                     onlineUserList.add(tempOnlineUser);
 
-                    //Toast.makeText(MapsActivity.this, onlineUserList.size() + "", Toast.LENGTH_SHORT).show();
+
                     getOnlineUserData();
 
 
@@ -302,69 +305,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    private void sendNotification() {
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                int SDK_INT = android.os.Build.VERSION.SDK_INT;
-                if (SDK_INT > 8) {
-                    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-                            .permitAll().build();
-                    StrictMode.setThreadPolicy(policy);
-
-
-                    try {
-                        String jsonResponse;
-
-                        URL url = new URL("https://onesignal.com/api/v1/notifications");
-                        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                        con.setUseCaches(false);
-                        con.setDoOutput(true);
-                        con.setDoInput(true);
-
-                        con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-                        con.setRequestProperty("Authorization", "Basic ODVkNDdjZTMtMThlNy00M2VmLTkwYTItOGI3NTgyNmQ5MDlm");
-                        con.setRequestMethod("POST");
-
-                        String strJsonBody = "{"
-                                + "\"app_id\": \"9902773d-e28d-4b87-9ed2-b1683306d0bc\","
-                                + "\"included_segments\": [\"All\"],"
-                                + "\"data\": {\"foo\": \"bar\"},"
-                                + "\"contents\": {\"en\": \"Someone is Visible in Map \"}"
-                                + "}";
-
-
-                        System.out.println("strJsonBody:\n" + strJsonBody);
-
-                        byte[] sendBytes = strJsonBody.getBytes("UTF-8");
-                        con.setFixedLengthStreamingMode(sendBytes.length);
-
-                        OutputStream outputStream = con.getOutputStream();
-                        outputStream.write(sendBytes);
-
-                        int httpResponse = con.getResponseCode();
-                        System.out.println("httpResponse: " + httpResponse);
-
-                        if (httpResponse >= HttpURLConnection.HTTP_OK
-                                && httpResponse < HttpURLConnection.HTTP_BAD_REQUEST) {
-                            Scanner scanner = new Scanner(con.getInputStream(), "UTF-8");
-                            jsonResponse = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
-                            scanner.close();
-                        } else {
-                            Scanner scanner = new Scanner(con.getErrorStream(), "UTF-8");
-                            jsonResponse = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
-                            scanner.close();
-                        }
-                        System.out.println("jsonResponse:\n" + jsonResponse);
-
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                    }
-                }
-            }
-        });
-    }
-
 
     public void addMarkerOnMap(double latitude, double longitude) {
         MarkerOptions markerOption = new MarkerOptions()
@@ -374,20 +314,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.addMarker(markerOption);
 
 
-        if (Flag){
+        if (Flag) {
 
             MarkerOptions markerConnectionUser = new MarkerOptions()
                     .position(acceptUserPosition)
-                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.marker4));
+                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.marker8));
             mMap.addMarker(markerConnectionUser);
 
         }
-
-
-
-
-
-
 
 
     }
@@ -450,65 +384,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    private void sendNotificationToOnlineUser() {
 
-
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    String jsonResponse;
-
-                    URL url = new URL("https://onesignal.com/api/v1/notifications");
-                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                    con.setUseCaches(false);
-                    con.setDoOutput(true);
-                    con.setDoInput(true);
-
-                    con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-                    con.setRequestProperty("Authorization", "Basic ODVkNDdjZTMtMThlNy00M2VmLTkwYTItOGI3NTgyNmQ5MDlm");
-                    con.setRequestMethod("POST");
-
-                    String strJsonBody = "{"
-                            + "\"app_id\": \"9902773d-e28d-4b87-9ed2-b1683306d0bc\","
-                            //  +   "\"included_segments\": [\"All\"],"
-                            + "\"filters\": [ {\"field\": \"tag\", \"key\": \"Online\", \"relation\": \"exists\"}],"
-                            + "\"data\": {\"tap\":\"tap\"},"
-                            + "\"buttons\": [{\"id\":\"explore\",\"text\":\"EXPLORE NOW\",\"icon\":\"\"}],"
-                            + "\"contents\": {\"en\": \"Someone is visible on Map\"}"
-                            + "}";
-
-
-                    System.out.println("strJsonBody:\n" + strJsonBody);
-
-                    byte[] sendBytes = strJsonBody.getBytes("UTF-8");
-                    con.setFixedLengthStreamingMode(sendBytes.length);
-
-                    OutputStream outputStream = con.getOutputStream();
-                    outputStream.write(sendBytes);
-
-                    int httpResponse = con.getResponseCode();
-                    System.out.println("httpResponse: " + httpResponse);
-
-                    if (httpResponse >= HttpURLConnection.HTTP_OK
-                            && httpResponse < HttpURLConnection.HTTP_BAD_REQUEST) {
-                        Scanner scanner = new Scanner(con.getInputStream(), "UTF-8");
-                        jsonResponse = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
-                        scanner.close();
-                    } else {
-                        Scanner scanner = new Scanner(con.getErrorStream(), "UTF-8");
-                        jsonResponse = scanner.useDelimiter("\\A").hasNext() ? scanner.next() : "";
-                        scanner.close();
-                    }
-                    System.out.println("jsonResponse:\n" + jsonResponse);
-
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                }
-            }
-        });
-
-    }
 
 
 }

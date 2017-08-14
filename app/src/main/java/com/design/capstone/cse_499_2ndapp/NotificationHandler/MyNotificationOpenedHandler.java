@@ -1,6 +1,9 @@
 package com.design.capstone.cse_499_2ndapp.NotificationHandler;
 
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.util.Log;
 
 import com.design.capstone.cse_499_2ndapp.Activity.AnotherActivity;
@@ -24,7 +27,6 @@ public class MyNotificationOpenedHandler implements OneSignal.NotificationOpened
         JSONObject data = result.notification.payload.additionalData;
 
         String requestFrom = data.optString("requestId").toString();
-
 
         if (actionType == OSNotificationAction.ActionType.ActionTaken) {
             Log.e("OneSignalExample", "Button pressed with id: " + result.action.actionID);
@@ -58,6 +60,7 @@ public class MyNotificationOpenedHandler implements OneSignal.NotificationOpened
             MyApplication.getContext().startActivity(intent);
 
         }
+
 
     }
 }

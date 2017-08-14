@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -39,6 +40,7 @@ public class AnotherActivity extends AppCompatActivity {
 
     ArrayList<Online> Onldata ;
     private String requestFrom;
+    private boolean acceptedByButton = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,7 +96,6 @@ public class AnotherActivity extends AppCompatActivity {
                             if (task.isSuccessful()) {
 
 
-                               // Toast.makeText(AnotherActivity.this, " Connected " , Toast.LENGTH_SHORT).show();
 
                                 Online online =  finduserdata();
 
@@ -105,10 +106,12 @@ public class AnotherActivity extends AppCompatActivity {
                                     e.printStackTrace();
                                 }
 
+                                acceptedByButton = true;
                                 Toast.makeText(AnotherActivity.this, " Connected", Toast.LENGTH_SHORT).show();
                                 startActivity(new Intent(AnotherActivity.this, MapsActivity.class).putExtra("lat", online.getLatitude()).putExtra("lon", online.getLongitude()));
                             } else {
                                 Toast.makeText(AnotherActivity.this, "This request not available now", Toast.LENGTH_SHORT).show();
+                                startActivity(new Intent(AnotherActivity.this,MapsActivity.class));
                             }
 
                         }
@@ -138,6 +141,20 @@ public class AnotherActivity extends AppCompatActivity {
             }
         });
 
+        if (!acceptedByButton){
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    dialog.dismiss();
+
+                    finish();
+                    Toast.makeText(AnotherActivity.this, " Request Forward to other person", Toast.LENGTH_SHORT).show();
+
+                }
+            },10000);
+
+        }
 
     }
 

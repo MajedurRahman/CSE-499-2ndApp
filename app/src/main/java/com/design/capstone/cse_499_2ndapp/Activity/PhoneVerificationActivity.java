@@ -36,8 +36,6 @@ public class PhoneVerificationActivity extends AppCompatActivity {
     User user;
     String mVerificationId;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
-    DatabaseReference userOnlineRef = database.getReference("isOnline");
-    DatabaseReference userBusyRef = database.getReference("isBusy");
     DatabaseReference userRef = database.getReference("UserData");
     private FirebaseAuth mAuth;
     private PhoneAuthProvider.ForceResendingToken mResendToken;
@@ -49,9 +47,8 @@ public class PhoneVerificationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_phone_verification);
 
         intComponents();
-        initFireBaseSMSverification();
-
         initOnClickAction();
+        initFireBaseSMSverification();
 
 
     }
